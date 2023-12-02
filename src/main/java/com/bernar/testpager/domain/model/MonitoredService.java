@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class MonitoredService {
 
     private String monitoredServiceId;
+    private State state;
 }

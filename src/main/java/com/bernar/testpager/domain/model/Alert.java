@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Alert {
 
-    private String id;
+    private String monitoredServiceId;
+    private String message;
 }

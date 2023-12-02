@@ -1,5 +1,6 @@
 package com.bernar.testpager.domain.model;
 
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,5 +14,5 @@ import lombok.NoArgsConstructor;
 public class EscalationPolicy {
 
     private String monitoredServiceId;
-    private Map<Integer, Level> levels;
+    private Map<Integer, List<Target>> levels;
 }
