@@ -1,8 +1,15 @@
 package com.bernar.testpager.domain.application;
 
-import jakarta.inject.Singleton;
+import com.bernar.testpager.model.Alert;
+import com.bernar.testpager.model.Target;
 
 public interface DomainLogic {
-    void runPagerDomainLogic();
+    void manageReceivedAlert();
+
+    void handleTimeout();
+
+    void manageReceivedAck(Target target, Alert alert);
+
+    void manageReceivedHealthy(String monitoredServiceId);
     
 }
