@@ -1,4 +1,4 @@
-package com.bernar.testpager.domain.model;
+package com.bernar.testpager.model;
 
 public abstract class Target {
     public abstract void sendMessage(String message);

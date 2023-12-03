@@ -1,4 +1,4 @@
-package com.bernar.testpager.domain.model;
+package com.bernar.testpager.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MonitoredService {
+public class Timer {
 
-    private String monitoredServiceId;
-    private State state;
+    private String alertId;
+    private Integer timeoutSeconds;
 }

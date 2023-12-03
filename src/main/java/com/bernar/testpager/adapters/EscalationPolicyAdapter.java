@@ -1,6 +1,6 @@
 package com.bernar.testpager.adapters;
 
-import com.bernar.testpager.domain.model.EscalationPolicy;
+import com.bernar.testpager.model.EscalationPolicy;
 
 public interface EscalationPolicyAdapter {
 

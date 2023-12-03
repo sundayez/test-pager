@@ -1,7 +1,7 @@
 package com.bernar.testpager.domain.model;
 
-public enum State {
+public enum AckStatus {
 
-    HEALTHY,
-    UNHEALTHY
+    ACK,
+    NACK
 }

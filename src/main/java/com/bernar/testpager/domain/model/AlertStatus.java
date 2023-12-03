@@ -1,5 +1,6 @@
 package com.bernar.testpager.domain.model;
 
+import com.bernar.testpager.model.Level;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Alert {
+public class AlertStatus {
 
-    private String monitoredServiceId;
-    private String message;
+    private String alertId;
+    private Level level;
+    private AckStatus ackStatus;
 }
