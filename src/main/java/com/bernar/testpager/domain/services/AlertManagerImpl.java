@@ -1,6 +1,7 @@
 package com.bernar.testpager.domain.services;
 
 import com.bernar.testpager.adapters.EscalationPolicyAdapter;
+import com.bernar.testpager.adapters.TimerAdapter;
 import com.bernar.testpager.domain.model.AckStatus;
 import com.bernar.testpager.domain.model.AlertStatus;
 import com.bernar.testpager.model.Alert;
@@ -16,26 +17,27 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AlertManagerImpl implements AlertManager {
 
-    private List<AlertStatus> alertStatuses = new ArrayList<>();
+    private final List<AlertStatus> alertStatuses = new ArrayList<>();
 
     private final EscalationPolicyAdapter escalationPolicyAdapter;
+    private final TimerAdapter timerAdapter;
+
     private final NotificationManager notificationManager;
     private final MonitoredServiceManager monitoredServiceManager;
-    private final TimerManager timerManager;
 
     @Override
     public void processAlert(Alert alert) {
         var monitoredServiceId = alert.getMonitoredServiceId();
 
+        monitoredServiceManager.setMonitoredServiceState(monitoredServiceId, State.UNHEALTHY);
+
         var escalationPolicy = escalationPolicyAdapter.getEscalationPolicyByMonitoredService(
             monitoredServiceId);
-
-        monitoredServiceManager.setMonitoredServiceState(monitoredServiceId, State.UNHEALTHY);
 
         var targets = escalationPolicy.getLevels().get(Level.LOW);
         notificationManager.notifyTargets(targets, alert.getMessage());
 
-        timerManager.setTimer(
+        timerAdapter.addTimer(
             Timer.builder().alertId(alert.getAlertId()).timeoutSeconds(15 * 60).build());
 
         alertStatuses.add(AlertStatus.builder()
@@ -43,5 +45,36 @@ public class AlertManagerImpl implements AlertManager {
             .level(Level.LOW)
             .ackStatus(AckStatus.NACK)
             .build());
+    }
+
+    @Override
+    public void handleTimeout(Alert alert) {
+        var alertId = alert.getAlertId();
+        if (!timerAdapter.isTimedOut(alertId)) {
+            return;
+        }
+        var alertStatus = alertStatuses.stream()
+            .filter(status -> alertId.equals(status.getAlertId())).findFirst();
+        if (alertStatus.isPresent() && alertStatus.get().getAckStatus() == AckStatus.NACK
+            && monitoredServiceManager.getMonitoredServiceState(alert.getMonitoredServiceId()) == State.UNHEALTHY) {
+            escalateAlert(alert, alertStatus.get());
+        }
+    }
+
+    private void escalateAlert(Alert alert, AlertStatus alertStatus) {
+
+        var escalationPolicy = escalationPolicyAdapter.getEscalationPolicyByMonitoredService(
+            alert.getMonitoredServiceId());
+
+        var nextLevel = alertStatus.getLevel().getNextLevel(); //LOW TO MEDIUM, etc.
+        var targets = escalationPolicy.getLevels().get(nextLevel);
+        notificationManager.notifyTargets(targets, alert.getMessage());
+
+        timerAdapter.addTimer(
+            Timer.builder().alertId(alert.getAlertId()).timeoutSeconds(15 * 60).build());
+
+        // Update the level
+        alertStatuses.stream().filter(t -> alert.getAlertId().equals(t.getAlertId()))
+                .forEach(t -> t.setLevel(nextLevel));
     }
 }

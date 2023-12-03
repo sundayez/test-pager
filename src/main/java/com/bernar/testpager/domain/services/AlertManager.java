@@ -6,4 +6,5 @@ public interface AlertManager {
 
     void processAlert(Alert alert);
 
+    void handleTimeout(Alert alert);
 }

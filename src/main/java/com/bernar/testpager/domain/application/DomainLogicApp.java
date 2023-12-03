@@ -17,8 +17,8 @@ public class DomainLogicApp implements DomainLogic {
 
     private final AlertManager alertManager;
 
-    // This is a single iteration of the application with the main logic (polling alerts and processing them)
-    // In a real scenario, this could be a Rest API controller or a message broker consuming alert messages
+    // This method runs a single iteration of the main logic (polling and processing alerts)
+    // In a real scenario, this class could be a Rest API controller or a message broker consuming alert messages
     @Override
     public void runPagerDomainLogic() {
         var alerts = alertingAdapter.pollAlerts();

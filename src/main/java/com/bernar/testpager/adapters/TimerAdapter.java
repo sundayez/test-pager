@@ -6,6 +6,6 @@ public interface TimerAdapter {
 
     void addTimer(Timer timer);
 
-    boolean isTimedOut(Timer timer);
+    boolean isTimedOut(String alertId);
 
 }

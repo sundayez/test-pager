@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AlertStatus {
 
-    private String alertId;
+    private String alertId; // must be unique, it is later used to check the acknowledgment from the targets
     private Level level;
     private AckStatus ackStatus;
 }
