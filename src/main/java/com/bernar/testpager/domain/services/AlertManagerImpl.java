@@ -26,7 +26,8 @@ public class AlertManagerImpl implements AlertManager {
     public void processAlert(Alert alert) {
         var monitoredServiceId = alert.getMonitoredServiceId();
 
-        if (State.HEALTHY.equals(monitoredServiceManager.getMonitoredServiceState(monitoredServiceId))) {
+        if (State.HEALTHY.equals(
+            monitoredServiceManager.getMonitoredServiceState(monitoredServiceId))) {
 
             monitoredServiceManager.setMonitoredServiceState(monitoredServiceId, State.UNHEALTHY);
 
@@ -53,11 +54,14 @@ public class AlertManagerImpl implements AlertManager {
         if (!timerAdapter.isTimedOut(alertId)) {
             return;
         }
-        var alertStatus = alertStatusManager.getAlertStatusByAlertId(alertId);
-        if (alertStatus.isPresent() && alertStatus.get().getAckStatus() == AckStatus.NACK
-            && monitoredServiceManager.getMonitoredServiceState(alert.getMonitoredServiceId())
+        if (monitoredServiceManager.getMonitoredServiceState(alert.getMonitoredServiceId())
             == State.UNHEALTHY) {
-            escalateAlert(alert, alertStatus.get());
+            var alertStatus = alertStatusManager.getAlertStatusByAlertId(alertId);
+            if (alertStatus.isPresent() &&
+                alertStatus.get().getAckStatus() == AckStatus.NACK &&
+                !Level.CRITICAL.equals(alertStatus.get().getLevel())) {
+                escalateAlert(alert, alertStatus.get());
+            }
         }
     }
 
@@ -76,17 +80,14 @@ public class AlertManagerImpl implements AlertManager {
         var escalationPolicy = escalationPolicyAdapter.getEscalationPolicyByMonitoredService(
             alert.getMonitoredServiceId());
 
-        // If level is critical, no escalation takes place according to the problem statement
-        if (!Level.CRITICAL.equals(alertStatus.getLevel())) {
-            var nextLevel = alertStatus.getLevel().getNextLevel(); //LOW TO MEDIUM, etc.
-            var targets = escalationPolicy.getLevels().get(nextLevel);
-            notificationManager.notifyTargets(targets, alert.getMessage());
+        var nextLevel = alertStatus.getLevel().getNextLevel(); //LOW TO MEDIUM, etc.
+        var targets = escalationPolicy.getLevels().get(nextLevel);
+        notificationManager.notifyTargets(targets, alert.getMessage());
 
-            timerAdapter.addTimer(
-                Timer.builder().alertId(alert.getAlertId()).timeoutSeconds(15 * 60).build());
+        timerAdapter.addTimer(
+            Timer.builder().alertId(alert.getAlertId()).timeoutSeconds(15 * 60).build());
 
-            // Update the level
-            alertStatusManager.updateAlertLevel(alert.getAlertId(), nextLevel);
-        }
+        // Update the level
+        alertStatusManager.updateAlertLevel(alert.getAlertId(), nextLevel);
     }
 }
