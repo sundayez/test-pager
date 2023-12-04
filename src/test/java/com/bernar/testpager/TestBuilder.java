@@ -11,6 +11,7 @@ import com.bernar.testpager.model.EscalationPolicy;
 import com.bernar.testpager.model.Level;
 import com.bernar.testpager.model.MailTarget;
 import com.bernar.testpager.model.SMSTarget;
+import com.bernar.testpager.model.Target;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -49,6 +50,10 @@ public class TestBuilder {
             .ackStatus(ackStatus)
             .level(level)
             .build();
+    }
+
+    public List<Target> buildTargets() {
+        return List.of(buildSMSTarget(PHONE_NUMBER_LOW), buildMailTarget(MAIL_ADDRESS_LOW));
     }
 
     public EscalationPolicy buildEscalationPolicy() {
