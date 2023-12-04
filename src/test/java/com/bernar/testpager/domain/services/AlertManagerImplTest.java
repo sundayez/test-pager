@@ -152,30 +152,13 @@ class AlertManagerImplTest {
     }
 
     @Test
-    void UseCase2_When_TimeoutReceived_And_HealthyService_Then_NoEscalation() {
-        // Given
-        when(monitoredServiceManager.getMonitoredServiceState(MONITORED_SERVICE_ID)).thenReturn(
-            State.HEALTHY);
-
-        when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
-
-        // When
-        alertManager.handleTimeout(buildAlert());
-
-        // Then
-        verifyNoInteractions(notificationManager);
-        verify(timerAdapter, never()).addTimer(any());
-        verifyNoInteractions(alertStatusManager);
-    }
-
-    @Test
-    void UseCase2_When_TimeoutReceived_And_AcknowledgedAlert_Then_NoEscalation() {
+    void UseCase2_When_TimeoutReceived_And_LastLevelOfEscalation_Then_NoEscalation() {
         // Given
         when(monitoredServiceManager.getMonitoredServiceState(MONITORED_SERVICE_ID)).thenReturn(
             State.UNHEALTHY);
 
         when(alertStatusManager.getAlertStatusByAlertId(ALERT_ID)).thenReturn(
-            Optional.of(buildAlertStatus(Level.LOW, AckStatus.ACK)));
+            Optional.of(buildAlertStatus(Level.CRITICAL, AckStatus.NACK)));
 
         when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
 
@@ -189,13 +172,13 @@ class AlertManagerImplTest {
     }
 
     @Test
-    void UseCase2_When_TimeoutReceived_And_LastLevelOfEscalation_Then_NoEscalation() {
+    void UseCase3_Partial_When_AlertIsAcknowledged_And_LaterTimeOut_Then_NoEscalation() {
         // Given
         when(monitoredServiceManager.getMonitoredServiceState(MONITORED_SERVICE_ID)).thenReturn(
             State.UNHEALTHY);
 
         when(alertStatusManager.getAlertStatusByAlertId(ALERT_ID)).thenReturn(
-            Optional.of(buildAlertStatus(Level.CRITICAL, AckStatus.NACK)));
+            Optional.of(buildAlertStatus(Level.LOW, AckStatus.ACK)));
 
         when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
 
@@ -221,6 +204,23 @@ class AlertManagerImplTest {
         verify(monitoredServiceManager, never()).setMonitoredServiceState(anyString(), any());
         verifyNoInteractions(notificationManager);
         verifyNoInteractions(timerAdapter);
+        verifyNoInteractions(alertStatusManager);
+    }
+
+    @Test
+    void UseCase5_Partial_When_TimeoutReceived_And_HealthyService_Then_NoEscalation() {
+        // Given
+        when(monitoredServiceManager.getMonitoredServiceState(MONITORED_SERVICE_ID)).thenReturn(
+            State.HEALTHY);
+
+        when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
+
+        // When
+        alertManager.handleTimeout(buildAlert());
+
+        // Then
+        verifyNoInteractions(notificationManager);
+        verify(timerAdapter, never()).addTimer(any());
         verifyNoInteractions(alertStatusManager);
     }
 
