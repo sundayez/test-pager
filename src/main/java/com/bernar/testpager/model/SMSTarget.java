@@ -1,18 +1,18 @@
 package com.bernar.testpager.model;
 
 import com.bernar.testpager.adapters.SMSAdapter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
 @EqualsAndHashCode(callSuper = false)
+@Data
+@Builder
 @RequiredArgsConstructor
 public class SMSTarget extends Target {
 
-    private String phoneNumber;
+    private final String phoneNumber;
 
     private final SMSAdapter smsAdapter;
 

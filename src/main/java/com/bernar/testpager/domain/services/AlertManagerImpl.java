@@ -9,19 +9,16 @@ import com.bernar.testpager.model.Level;
 import com.bernar.testpager.model.State;
 import com.bernar.testpager.model.Timer;
 import jakarta.inject.Singleton;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @Singleton
 @RequiredArgsConstructor
 public class AlertManagerImpl implements AlertManager {
 
-    private final List<AlertStatus> alertStatuses = new ArrayList<>();
-
     private final EscalationPolicyAdapter escalationPolicyAdapter;
     private final TimerAdapter timerAdapter;
 
+    private final AlertStatusManager alertStatusManager;
     private final NotificationManager notificationManager;
     private final MonitoredServiceManager monitoredServiceManager;
 
@@ -29,8 +26,7 @@ public class AlertManagerImpl implements AlertManager {
     public void processAlert(Alert alert) {
         var monitoredServiceId = alert.getMonitoredServiceId();
 
-        if (State.HEALTHY.equals(
-            monitoredServiceManager.getMonitoredServiceState(monitoredServiceId))) {
+        if (State.HEALTHY.equals(monitoredServiceManager.getMonitoredServiceState(monitoredServiceId))) {
 
             monitoredServiceManager.setMonitoredServiceState(monitoredServiceId, State.UNHEALTHY);
 
@@ -43,7 +39,7 @@ public class AlertManagerImpl implements AlertManager {
             timerAdapter.addTimer(
                 Timer.builder().alertId(alert.getAlertId()).timeoutSeconds(15 * 60).build());
 
-            alertStatuses.add(AlertStatus.builder()
+            alertStatusManager.addAlertStatus(AlertStatus.builder()
                 .alertId(alert.getAlertId())
                 .level(Level.LOW)
                 .ackStatus(AckStatus.NACK)
@@ -57,8 +53,7 @@ public class AlertManagerImpl implements AlertManager {
         if (!timerAdapter.isTimedOut(alertId)) {
             return;
         }
-        var alertStatus = alertStatuses.stream()
-            .filter(status -> alertId.equals(status.getAlertId())).findFirst();
+        var alertStatus = alertStatusManager.getAlertStatusByAlertId(alertId);
         if (alertStatus.isPresent() && alertStatus.get().getAckStatus() == AckStatus.NACK
             && monitoredServiceManager.getMonitoredServiceState(alert.getMonitoredServiceId())
             == State.UNHEALTHY) {
@@ -68,8 +63,7 @@ public class AlertManagerImpl implements AlertManager {
 
     @Override
     public void acknowledgeAlert(Alert alert) {
-        alertStatuses.stream().filter(t -> alert.getAlertId().equals(t.getAlertId()))
-            .forEach(t -> t.setAckStatus(AckStatus.ACK));
+        alertStatusManager.acknowledgeAlert(alert.getAlertId());
     }
 
     @Override
@@ -92,8 +86,7 @@ public class AlertManagerImpl implements AlertManager {
                 Timer.builder().alertId(alert.getAlertId()).timeoutSeconds(15 * 60).build());
 
             // Update the level
-            alertStatuses.stream().filter(t -> alert.getAlertId().equals(t.getAlertId()))
-                .forEach(t -> t.setLevel(nextLevel));
+            alertStatusManager.updateAlertLevel(alert.getAlertId(), nextLevel);
         }
     }
 }

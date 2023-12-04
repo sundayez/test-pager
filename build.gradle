@@ -22,8 +22,9 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic")
 
     testImplementation("io.micronaut:micronaut-http-client")
-    testCompileOnly 'org.projectlombok:lombok:$lombokVersion'
-    testAnnotationProcessor 'org.projectlombok:lombok:$lombokVersion'
+    testCompileOnly("org.projectlombok:lombok:$lombokVersion")
+    testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
+    testImplementation("org.mockito:mockito-core")
 }
 
 

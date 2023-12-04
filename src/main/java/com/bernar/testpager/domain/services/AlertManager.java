@@ -1,7 +1,6 @@
 package com.bernar.testpager.domain.services;
 
 import com.bernar.testpager.model.Alert;
-import com.bernar.testpager.model.Target;
 
 public interface AlertManager {
 
