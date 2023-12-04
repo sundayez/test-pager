@@ -39,14 +39,8 @@ public class DomainLogicApp implements DomainLogic {
     }
 
     @Override
-    public void handleTimeout() {
+    public void handleTimeout(Alert alert) {
         // In a real scenario, this poll could be done with a Rest API controller or a message broker consuming alert messages
-        var alert = Alert.builder()
-            .alertId(UUID.randomUUID().toString())
-            .monitoredServiceId(UUID.randomUUID().toString())
-            .message("Alert message")
-            .build();
-
         if (timerAdapter.isTimedOut(alert.getAlertId())) {
             alertManager.handleTimeout(alert);
         }

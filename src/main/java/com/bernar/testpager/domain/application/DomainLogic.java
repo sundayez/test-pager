@@ -6,7 +6,7 @@ import com.bernar.testpager.model.Target;
 public interface DomainLogic {
     void manageReceivedAlert();
 
-    void handleTimeout();
+    void handleTimeout(Alert alert);
 
     void manageReceivedAck(Target target, Alert alert);
 

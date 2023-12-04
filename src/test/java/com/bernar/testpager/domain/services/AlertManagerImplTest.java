@@ -1,5 +1,16 @@
 package com.bernar.testpager.domain.services;
 
+import static com.bernar.testpager.TestBuilder.ALERT_ID;
+import static com.bernar.testpager.TestBuilder.MAIL_ADDRESS_CRITICAL;
+import static com.bernar.testpager.TestBuilder.MAIL_ADDRESS_HIGH;
+import static com.bernar.testpager.TestBuilder.MAIL_ADDRESS_LOW;
+import static com.bernar.testpager.TestBuilder.MAIL_ADDRESS_MEDIUM;
+import static com.bernar.testpager.TestBuilder.MESSAGE;
+import static com.bernar.testpager.TestBuilder.MONITORED_SERVICE_ID;
+import static com.bernar.testpager.TestBuilder.PHONE_NUMBER_CRITICAL;
+import static com.bernar.testpager.TestBuilder.PHONE_NUMBER_HIGH;
+import static com.bernar.testpager.TestBuilder.PHONE_NUMBER_LOW;
+import static com.bernar.testpager.TestBuilder.PHONE_NUMBER_MEDIUM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,14 +21,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.bernar.testpager.TestBuilder;
 import com.bernar.testpager.adapters.EscalationPolicyAdapter;
-import com.bernar.testpager.adapters.MailAdapter;
-import com.bernar.testpager.adapters.SMSAdapter;
 import com.bernar.testpager.adapters.TimerAdapter;
 import com.bernar.testpager.domain.model.AckStatus;
 import com.bernar.testpager.domain.model.AlertStatus;
-import com.bernar.testpager.model.Alert;
-import com.bernar.testpager.model.EscalationPolicy;
 import com.bernar.testpager.model.Level;
 import com.bernar.testpager.model.MailTarget;
 import com.bernar.testpager.model.SMSTarget;
@@ -26,7 +34,6 @@ import com.bernar.testpager.model.Target;
 import com.bernar.testpager.model.Timer;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,29 +46,12 @@ import org.mockito.ArgumentCaptor;
 @MicronautTest
 class AlertManagerImplTest {
 
-    private static final String ALERT_ID = "ALERT_ID";
-    private static final String MONITORED_SERVICE_ID = "MONITORED_SERVICE_ID";
-    private static final String MESSAGE = "MESSAGE";
-
-    private static final String PHONE_NUMBER_LOW = "555-1234";
-    private static final String PHONE_NUMBER_MEDIUM = "555-1235";
-    private static final String PHONE_NUMBER_HIGH = "555-1236";
-    private static final String PHONE_NUMBER_CRITICAL = "555-1237";
-
-    private static final String MAIL_ADDRESS_LOW = "low@mail.com";
-    private static final String MAIL_ADDRESS_MEDIUM = "medium@mail.com";
-    private static final String MAIL_ADDRESS_HIGH = "high@mail.com";
-    private static final String MAIL_ADDRESS_CRITICAL = "critical@mail.com";
-
     private EscalationPolicyAdapter escalationPolicyAdapter;
     private TimerAdapter timerAdapter;
 
     private AlertStatusManager alertStatusManager;
     private NotificationManager notificationManager;
     private MonitoredServiceManager monitoredServiceManager;
-
-    private SMSAdapter smsAdapter;
-    private MailAdapter mailAdapter;
 
     private ArgumentCaptor<List<Target>> listArgumentCaptor;
     private ArgumentCaptor<Timer> timerArgumentCaptor;
@@ -75,8 +65,6 @@ class AlertManagerImplTest {
         alertStatusManager = mock(AlertStatusManager.class);
         notificationManager = mock(NotificationManager.class);
         monitoredServiceManager = mock(MonitoredServiceManager.class);
-        smsAdapter = mock(SMSAdapter.class);
-        mailAdapter = mock(MailAdapter.class);
 
         listArgumentCaptor = ArgumentCaptor.forClass(List.class);
         timerArgumentCaptor = ArgumentCaptor.forClass(Timer.class);
@@ -93,10 +81,10 @@ class AlertManagerImplTest {
             State.HEALTHY);
 
         when(escalationPolicyAdapter.getEscalationPolicyByMonitoredService(MONITORED_SERVICE_ID))
-            .thenReturn(buildEscalationPolicy());
+            .thenReturn(TestBuilder.buildEscalationPolicy());
 
         // When
-        alertManager.processAlert(buildAlert());
+        alertManager.processAlert(TestBuilder.buildAlert());
 
         // Then
         verify(monitoredServiceManager).setMonitoredServiceState(MONITORED_SERVICE_ID,
@@ -128,15 +116,15 @@ class AlertManagerImplTest {
             State.UNHEALTHY);
 
         when(alertStatusManager.getAlertStatusByAlertId(ALERT_ID)).thenReturn(
-            Optional.of(buildAlertStatus(level, AckStatus.NACK)));
+            Optional.of(TestBuilder.buildAlertStatus(level, AckStatus.NACK)));
 
         when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
 
         when(escalationPolicyAdapter.getEscalationPolicyByMonitoredService(MONITORED_SERVICE_ID))
-            .thenReturn(buildEscalationPolicy());
+            .thenReturn(TestBuilder.buildEscalationPolicy());
 
         // When
-        alertManager.handleTimeout(buildAlert());
+        alertManager.handleTimeout(TestBuilder.buildAlert());
 
         // Then
         verify(notificationManager).notifyTargets(listArgumentCaptor.capture(), eq(MESSAGE));
@@ -158,12 +146,12 @@ class AlertManagerImplTest {
             State.UNHEALTHY);
 
         when(alertStatusManager.getAlertStatusByAlertId(ALERT_ID)).thenReturn(
-            Optional.of(buildAlertStatus(Level.CRITICAL, AckStatus.NACK)));
+            Optional.of(TestBuilder.buildAlertStatus(Level.CRITICAL, AckStatus.NACK)));
 
         when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
 
         // When
-        alertManager.handleTimeout(buildAlert());
+        alertManager.handleTimeout(TestBuilder.buildAlert());
 
         // Then
         verifyNoInteractions(notificationManager);
@@ -178,12 +166,12 @@ class AlertManagerImplTest {
             State.UNHEALTHY);
 
         when(alertStatusManager.getAlertStatusByAlertId(ALERT_ID)).thenReturn(
-            Optional.of(buildAlertStatus(Level.LOW, AckStatus.ACK)));
+            Optional.of(TestBuilder.buildAlertStatus(Level.LOW, AckStatus.ACK)));
 
         when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
 
         // When
-        alertManager.handleTimeout(buildAlert());
+        alertManager.handleTimeout(TestBuilder.buildAlert());
 
         // Then
         verifyNoInteractions(notificationManager);
@@ -198,7 +186,7 @@ class AlertManagerImplTest {
             State.UNHEALTHY);
 
         // When
-        alertManager.processAlert(buildAlert());
+        alertManager.processAlert(TestBuilder.buildAlert());
 
         // Then
         verify(monitoredServiceManager, never()).setMonitoredServiceState(anyString(), any());
@@ -216,7 +204,7 @@ class AlertManagerImplTest {
         when(timerAdapter.isTimedOut(ALERT_ID)).thenReturn(true);
 
         // When
-        alertManager.handleTimeout(buildAlert());
+        alertManager.handleTimeout(TestBuilder.buildAlert());
 
         // Then
         verifyNoInteractions(notificationManager);
@@ -224,50 +212,22 @@ class AlertManagerImplTest {
         verifyNoInteractions(alertStatusManager);
     }
 
-    private Alert buildAlert() {
-        return Alert.builder()
-            .alertId(ALERT_ID)
-            .monitoredServiceId(MONITORED_SERVICE_ID)
-            .message(MESSAGE)
-            .build();
+    @Test
+    void When_AcknowledgeAlert_Then_StatusIsAcknowledged() {
+        // When
+        alertManager.acknowledgeAlert(TestBuilder.buildAlert());
+
+        // Then
+        verify(alertStatusManager).acknowledgeAlert(ALERT_ID);
     }
 
-    private AlertStatus buildAlertStatus(Level level, AckStatus ackStatus) {
-        return AlertStatus.builder()
-            .alertId(ALERT_ID)
-            .ackStatus(ackStatus)
-            .level(level)
-            .build();
-    }
+    @Test
+    void When_ServiceBecomesHealthy_Then_StatusIsUpdated() {
+        // When
+        alertManager.setServiceAsHealthy(MONITORED_SERVICE_ID);
 
-    private EscalationPolicy buildEscalationPolicy() {
-        return EscalationPolicy.builder()
-            .monitoredServiceId(MONITORED_SERVICE_ID)
-            .levels(Map.of(
-                Level.LOW,
-                List.of(buildSMSTarget(PHONE_NUMBER_LOW), buildMailTarget(MAIL_ADDRESS_LOW)),
-                Level.MEDIUM,
-                List.of(buildSMSTarget(PHONE_NUMBER_MEDIUM), buildMailTarget(MAIL_ADDRESS_MEDIUM)),
-                Level.HIGH,
-                List.of(buildSMSTarget(PHONE_NUMBER_HIGH), buildMailTarget(MAIL_ADDRESS_HIGH)),
-                Level.CRITICAL, List.of(buildSMSTarget(PHONE_NUMBER_CRITICAL),
-                    buildMailTarget(MAIL_ADDRESS_CRITICAL))
-            ))
-            .build();
-    }
-
-    private SMSTarget buildSMSTarget(String phoneNumber) {
-        return SMSTarget.builder()
-            .smsAdapter(smsAdapter)
-            .phoneNumber(phoneNumber)
-            .build();
-    }
-
-    private MailTarget buildMailTarget(String mailAddress) {
-        return MailTarget.builder()
-            .mailAdapter(mailAdapter)
-            .mailAddress(mailAddress)
-            .build();
+        // Then
+        verify(monitoredServiceManager).setMonitoredServiceState(MONITORED_SERVICE_ID, State.HEALTHY);
     }
 
     private static Stream<Arguments> providerTestEscalation() {
